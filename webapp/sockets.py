@@ -130,7 +130,9 @@ def handle_remoteOut(args, drivetrain_name):
     args.append(1) # hard-coding mecanum drive to strafe
     # for debugging
     print(drivetrain_name, 'remote =', repr(args))
-    if not ON_WINDOWS: # if there is a compatible drivetrain
+    if drivetrain_name == 'MIEL':
+        d_train[drivetrain_name].go(args)
+    elif not ON_WINDOWS: # if there is a compatible drivetrain
         d_train[drivetrain_name].go(args)
 
 # NOTE: Source for virtual terminal functions: https://github.com/cs01/pyxterm.js

@@ -1,7 +1,8 @@
 """
 A collection of wrapper classes that extend communication with external devices (ie arduino or another raspberry pi)
 """
-from webapp.outputs.roboclaw_3 import Roboclaw
+from webapp.outputs.roboclaw import Roboclaw
+from webapp.outputs.dummy_serial import Serial
 
 class EXTnode():
     """
@@ -34,8 +35,8 @@ class EXTnode():
 class ROBOCLAW:
     def __init__(self, address, claw_address=0x80):
         self._address = claw_address
-        self._device = Roboclaw(address, 38400)
-        self._device.Open()
+        self._device = Roboclaw(Serial(port='com5', baudrate=38400, timeout=1, interCharTimeout=0.01), address=claw_address)
+        # self._device.Open()
 
     def go(self, cmds):
         if len(cmds) < 2:
@@ -58,5 +59,5 @@ class ROBOCLAW:
             elif cmds[0] < 0:
                 left *= offset
         # send translated commands to motors
-        self._device.ForwardBackwardM1(self._address, int(left * 127 / 131070 + 64))
-        self._device.ForwardBackwardM2(self._address, int(right * 127 / 131070 + 64))
+        self._device.forward_backward_m1(int(left * 127 / 131070 + 64))
+        self._device.forward_backward_m2(int(right * 127 / 131070 + 64))
