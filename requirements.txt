@@ -1,7 +1,7 @@
-git+https://github.com/2bndy5/Adafruit_CircuitPython_LSM9DS1.git#egg=Adafruit_CircuitPython_LSM9DS1
-git+https://github.com/2bndy5/CircuitPython_MPU6050.git#egg=CircuitPython_MPU6050
 git+https://github.com/DVC-Viking-Robotics/Drivetrain.git#egg=Drivetrain
 git+https://github.com/DVC-Viking-Robotics/GPS_Serial.git#egg=GPS_Serial
+adafruit_circuitpython_lsm9ds1==2.0.5
+adafruit_circuitpython_mpu6050==1.0.1
 circuitpython-nrf24l01==1.1.0
 opencv-python==3.4.3.18
 pyserial==3.4

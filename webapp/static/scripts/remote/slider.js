@@ -2,7 +2,6 @@
 class Slider {
     constructor(canvas, horizontal = true) {
         this.canvas = canvas;
-        this.rect = 0;
         this.height = this.canvas.width;
         this.width = this.canvas.height;
         this.horizontal = horizontal;
