@@ -22,8 +22,8 @@ class Roboclaw:
     """
     def __init__(self, serial_obj, address=0x80, retries=3, packet_serial=True):
         self._port = serial_obj
-        if self._port.is_open:
-            self._port.close()
+        # if not self._port.is_open:
+        #     self._port.open()
         self._retries = retries
         self.packet_serial = packet_serial #: this `bool` represents if using packet serial mode.
         if address not in range(0x80, 0x88):
