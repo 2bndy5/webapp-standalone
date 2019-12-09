@@ -35,7 +35,7 @@ class EXTnode():
 class ROBOCLAW:
     def __init__(self, address, claw_address=0x80):
         self._address = claw_address
-        self._device = Roboclaw(Serial(port='com5', baudrate=38400, timeout=1, interCharTimeout=0.01), address=claw_address)
+        self._device = Roboclaw(Serial(port=address, baudrate=38400, timeout=1, interCharTimeout=0.01), address=claw_address)
         # self._device.Open()
 
     def go(self, cmds):
