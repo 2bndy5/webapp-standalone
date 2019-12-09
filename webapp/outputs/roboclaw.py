@@ -22,8 +22,8 @@ class Roboclaw:
     """
     def __init__(self, serial_obj, address=0x80, retries=3, packet_serial=True):
         self._port = serial_obj
-        if self._port.is_open:
-            self._port.close()
+        # if self._port.is_open:
+        #     self._port.close()
         self._retries = retries
         self.packet_serial = packet_serial #: this `bool` represents if using packet serial mode.
         if address not in range(0x80, 0x88):
@@ -52,15 +52,15 @@ class Roboclaw:
             checksum = crc16(buf)
             buf += bytes([checksum >> 8, checksum & 0xff])
         while trys:
-            with self._port as ser:
-                ser.write(buf)
-                if ack is None: # expects blanket ack
-                    if unpack('>B', ser.read(1))[0] == 0xff:
-                        return True
-                elif not ack:
-                    return ser.readline() # special case ack terminated w/ '\n' char
-                else: # for passing ack to _recv()
-                    return ser.read(ack + (2 if self.packet_serial and crc else 0))
+            # with self._port:
+            self._port.write(buf)
+            if ack is None: # expects blanket ack
+                if unpack('>B', self._port.read(1))[0] == 0xff:
+                    return True
+            elif not ack:
+                return self._port.readline() # special case ack terminated w/ '\n' char
+            else: # for passing ack to _recv()
+                return self._port.read(ack + (2 if self.packet_serial and crc else 0))
             trys -= 1
         return False
 
