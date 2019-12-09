@@ -1,8 +1,8 @@
 """RoboClaw library ported from original code written by a 7th grader"""
 import time
 import random
-from serial import SerialException # , Serial
-from .dummy_serial import Serial
+from serial import SerialException, Serial
+# from .dummy_serial import Serial
 from .serial_commands import Cmd
 
 # pylint: disable=line-too-long,invalid-name,missing-function-docstring

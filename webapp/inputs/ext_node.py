@@ -3,7 +3,8 @@ A collection of wrapper classes that extend communication with external devices 
 """
 from webapp.outputs.roboclaw import Roboclaw
 from webapp.outputs.roboclaw_3 import RoboClaw
-from webapp.outputs.dummy_serial import Serial
+# from webapp.outputs.dummy_serial import Serial
+from serial import SerialException, Serial
 
 class EXTnode():
     """
