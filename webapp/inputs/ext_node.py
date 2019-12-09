@@ -60,8 +60,8 @@ class ROBOCLAW:
             elif cmds[0] < 0:
                 left *= offset
         # send translated commands to motors
-        self._device.forward_backward_m1(int(left * 127 / 131070 + 64))
-        self._device.forward_backward_m2(int(right * 127 / 131070 + 64))
+        self._device.duty_m1(int(left / 2))
+        self._device.duty_m2(int(right / 2))
 
 class RoBoClAw:
     def __init__(self, address, claw_address=0x80):
