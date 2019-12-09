@@ -6,7 +6,7 @@ except NotImplementedError:
     pass  # addressed by has_gpio_pins variable
 from gps_serial import GPSserial
 from .check_platform import ON_RASPI, ON_JETSON
-from .ext_node import ROBOCLAW
+from .ext_node import ROBOCLAW, RoBoClAw
 
 if ON_RASPI:
     from drivetrain import Tank, Automotive, Locomotive, Solenoid, BiMotor, PhasedMotor, NRF24L01tx
@@ -87,6 +87,8 @@ if SYSTEM_CONF is not None:
                         motors.append(PhasedMotor(pins))
                     elif m['driver'].startswith('ROBOCLAW'):
                         d_train[d["name"]] = ROBOCLAW(m['address'])
+                    elif m['driver'].startswith('RoBoClAw'):
+                        d_train[d["name"]] = RoBoClAw(m['address'])
                     elif m['driver'].startswith('NRF24L01tx') and has_gpio_pins:
                         d_train[d["name"]] = NRF24L01tx(
                             RF24(SPI_BUS, Dio(pins[0]), Dio(pins[1])),

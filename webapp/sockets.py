@@ -130,7 +130,7 @@ def handle_remoteOut(args, drivetrain_name):
     args.append(1) # hard-coding mecanum drive to strafe
     # for debugging
     print(drivetrain_name, 'remote =', repr(args))
-    if drivetrain_name == 'MIEL':
+    if drivetrain_name.endswith(' code'):
         d_train[drivetrain_name].go(args)
     elif not ON_WINDOWS: # if there is a compatible drivetrain
         d_train[drivetrain_name].go(args)
