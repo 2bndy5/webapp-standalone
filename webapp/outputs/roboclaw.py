@@ -21,14 +21,24 @@ class Roboclaw:
     :param int retries: The amount of attempts to read/write data over the serial port. Defaults to 3.
     """
     def __init__(self, serial_obj, address=0x80, retries=3, packet_serial=True):
-        self._port = serial_obj
-        if self._port.is_open:
-            self._port.close()
+        self.serial_obj = serial_obj
+        self.serial_obj.close()
         self._retries = retries
         self.packet_serial = packet_serial #: this `bool` represents if using packet serial mode.
         if address not in range(0x80, 0x88):
             raise ValueError('Unsupported specified address: {address}')
-        self._address = bytes([address])
+        self._address = address
+
+    @property
+    def address(self):
+        """The Address of the specific Roboclaw device on the object's serial port
+        Must be in range [``0x80``, ``0x87``]"""
+        return self._address
+
+    @address.setter
+    def address(self, addr):
+        assert addr in range(0x80, 0x88)
+        self._address = addr
 
     def _send(self, buf, ack=None, address=None, crc=True):
         """
@@ -47,21 +57,23 @@ class Roboclaw:
         """
         trys = self._retries
         assert address is None or address in range(0x80, 0x88)
-        buf = (self._address if address is None else bytes([address])) + buf
+        buf = bytes(([self._address] if address is None else [address])) + buf
         if self.packet_serial:
             checksum = crc16(buf)
             buf += bytes([checksum >> 8, checksum & 0xff])
-        while trys:
-            with self._port:
-                self._port.write(buf)
+        with self.serial_obj:
+            while trys:
+                self.serial_obj.write(buf)
                 if ack is None: # expects blanket ack
-                    if unpack('>B', self._port.read(1))[0] == 0xff:
-                        return True
+                    response = self.serial_obj.read(1)
+                    if response: # if not timeout
+                        if unpack('>B', response)[0] == 0xff:
+                            return True
                 elif not ack:
-                    return self._port.read_until() # special case ack terminated w/ '\n' char
+                    return self.serial_obj.read_until() # special case ack terminated w/ '\n' char
                 else: # for passing ack to _recv()
-                    return self._port.read(ack + (2 if self.packet_serial and crc else 0))
-            trys -= 1
+                    return self.serial_obj.read(ack + (2 if self.packet_serial and crc else 0))
+                trys -= 1
         return False
 
     # User accessible functions

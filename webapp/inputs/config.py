@@ -4,16 +4,23 @@ try:
     import board
 except NotImplementedError:
     pass  # addressed by has_gpio_pins variable
-from gps_serial import GPSserial
+from gps_serial import GPSserial, Serial
 from .check_platform import ON_RASPI, ON_JETSON
-from .ext_node import ROBOCLAW, RoBoClAw
+from .ext_node import RoBoClAw
+from webapp.outputs.roboclaw import Roboclaw
+from drivetrain.roboclaw_bus import RoboclawChannels
+from drivetrain.motors import MotorPool
+from drivetrain.commander import Tank, Automotive, Locomotive
 
 if ON_RASPI:
-    from drivetrain import Tank, Automotive, Locomotive, Solenoid, BiMotor, PhasedMotor, NRF24L01tx
+    from serial import Serial
     from adafruit_lsm9ds1 import LSM9DS1_I2C
     from adafruit_mpu6050 import MPU6050
     from circuitpython_nrf24l01 import RF24
-    from digitalio import DigitalInOut as Dio
+    from digitalio import DigitalInOut
+    from drivetrain.motors import Solenoid, BiMotor, PhasedMotor
+    from drivetrain.interfaces import NRF24L01tx
+    from drivetrain.pwm import PWMOut
 
 from .imu import MAG3110
 
@@ -75,32 +82,46 @@ if SYSTEM_CONF is not None:
                 for m in d['motors']:
                     # detirmine driver class
                     pins = []
-                    # be sure its not a serial port address
-                    if m['address'].find(',') > 0 and has_gpio_pins:
-                        for p in m['address'].rsplit(','):
-                            pins.append(RPI_PIN_ALIAS[p])
                     if m['driver'].startswith('Solenoid') and len(pins) >= 1 and has_gpio_pins:
+                        for i, pin in enumerate(m['address'].rsplit(',')):
+                            pins[i] = DigitalInOut(RPI_PIN_ALIAS[pin])
                         motors.append(Solenoid(pins))
                     elif m['driver'].startswith('BiMotor') and len(pins) >= 1 and has_gpio_pins:
-                        motors.append(BiMotor(pins))
+                        for i, pin in enumerate(m['address'].rsplit(',')):
+                            pins[i] = PWMOut(int(pin))
+                        motors.append(BiMotor(pins[0], pins[1]))
                     elif m['driver'].startswith('PhasedMotor') and len(pins) == 2 and has_gpio_pins:
-                        motors.append(PhasedMotor(pins))
-                    elif m['driver'].startswith('ROBOCLAW'):
-                        d_train[d["name"]] = ROBOCLAW(m['address'])
-                    elif m['driver'].startswith('RoBoClAw'):
+                        for i, pin in enumerate(m['address'].rsplit(',')):
+                            if not i:
+                                pins[i] = DigitalInOut(RPI_PIN_ALIAS[pin])
+                            else:
+                                pins[i] = PWMOut(int(pin))
+                        motors.append(PhasedMotor(pins[0], pins[1]))
+                    elif m['driver'].startswith('RoboclawChannels'):
+                        for chnl in m['channels']:
+                            motors.append(
+                                RoboclawChannels(
+                                    Roboclaw(Serial(m['port'], 34800, timeout=1)),
+                                    int(m['address'], 16), chnl, ramp_time=0))
+                    elif m['driver'].startswith('RoBoClAw'): # for debugging og code
                         d_train[d["name"]] = RoBoClAw(m['address'])
                     elif m['driver'].startswith('NRF24L01tx') and has_gpio_pins:
+                        for i, pin in enumerate(m['address'].rsplit(',')):
+                            pins[i] = DigitalInOut(RPI_PIN_ALIAS[pin])
                         d_train[d["name"]] = NRF24L01tx(
-                            RF24(SPI_BUS, Dio(pins[0]), Dio(pins[1])),
+                            RF24(SPI_BUS, pins[0], pins[1]),
                                 address=bytes(m['name'].encode()),
                                 cmd_template=m['cmd_template'])
-                if d['type'].startswith('Tank') and has_gpio_pins:
-                    d_train[d["name"]] = Tank(motors, int(d['max speed']))
-                elif d['type'].startswith('Automotive') and has_gpio_pins:
-                    d_train[d["name"]] = Automotive(motors, int(d['max speed']))
-                elif d['type'].startswith('Locomotive') and has_gpio_pins:
-                    d_train[d["name"]] = Locomotive(motors, RPI_PIN_ALIAS[d['switch_pin']])
-
+                if motors:
+                    motors = MotorPool(motors=motors)
+                    if d['type'].startswith('Tank'):
+                        d_train[d["name"]] = Tank(motors, int(d['max speed']))
+                    elif d['type'].startswith('Automotive'):
+                        d_train[d["name"]] = Automotive(motors, int(d['max speed']))
+                    elif d['type'].startswith('Locomotive'):
+                        d_train[d["name"]] = Locomotive(motors, RPI_PIN_ALIAS[d['switch_pin']])
+        if 'Roboclaw Tank code' in d_train.keys():
+            d_train['Roboclaw Tank code'].smooth = False
     if 'IMU' in SYSTEM_CONF['Check-Hardware']:
         for imu in SYSTEM_CONF['IMU']:
             pins = []
