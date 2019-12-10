@@ -102,7 +102,7 @@ if SYSTEM_CONF is not None:
                             motors.append(
                                 RoboclawChannels(
                                     Roboclaw(Serial(m['port'], 34800, timeout=1)),
-                                    int(m['address'], 16), chnl, ramp_time=0))
+                                    int(m['address'], 16), chnl))
                     elif m['driver'].startswith('RoBoClAw'): # for debugging og code
                         d_train[d["name"]] = RoBoClAw(m['address'])
                     elif m['driver'].startswith('NRF24L01tx') and has_gpio_pins:
