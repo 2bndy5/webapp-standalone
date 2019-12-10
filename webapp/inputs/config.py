@@ -8,7 +8,7 @@ from gps_serial import GPSserial, Serial
 from .check_platform import ON_RASPI, ON_JETSON
 from .ext_node import RoBoClAw
 from webapp.outputs.roboclaw import Roboclaw
-from drivetrain.roboclaw_bus import RoboclawChannels
+from drivetrain.roboclaw_bus import RoboclawChannels, RoboclawMotorPool
 from drivetrain.motors import MotorPool
 from drivetrain.commander import Tank, Automotive, Locomotive
 
@@ -103,6 +103,10 @@ if SYSTEM_CONF is not None:
                                 RoboclawChannels(
                                     Roboclaw(Serial(m['port'], 34800, timeout=1)),
                                     int(m['address'], 16), chnl))
+                        # d_train[d["name"]] = Tank(
+                        #     RoboclawMotorPool(
+                        #         Serial(m['port'], 34800, timeout=1),
+                        #         address=[int(m['address'], 16)]))
                     elif m['driver'].startswith('RoBoClAw'): # for debugging og code
                         d_train[d["name"]] = RoBoClAw(m['address'])
                     elif m['driver'].startswith('NRF24L01tx') and has_gpio_pins:
@@ -113,13 +117,12 @@ if SYSTEM_CONF is not None:
                                 address=bytes(m['name'].encode()),
                                 cmd_template=m['cmd_template'])
                 if motors:
-                    motors = MotorPool(motors=motors)
                     if d['type'].startswith('Tank'):
-                        d_train[d["name"]] = Tank(motors, int(d['max speed']))
+                        d_train[d["name"]] = Tank(MotorPool(motors), int(d['max speed']))
                     elif d['type'].startswith('Automotive'):
-                        d_train[d["name"]] = Automotive(motors, int(d['max speed']))
+                        d_train[d["name"]] = Automotive(MotorPool(motors), int(d['max speed']))
                     elif d['type'].startswith('Locomotive'):
-                        d_train[d["name"]] = Locomotive(motors, RPI_PIN_ALIAS[d['switch_pin']])
+                        d_train[d["name"]] = Locomotive(MotorPool(motors), RPI_PIN_ALIAS[d['switch_pin']])
         if 'Roboclaw Tank code' in d_train.keys():
             d_train['Roboclaw Tank code'].smooth = False
     if 'IMU' in SYSTEM_CONF['Check-Hardware']:
